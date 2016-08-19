@@ -17,7 +17,11 @@ class ImagesetCopier
     (File.dirname(imageset_path.gsub(/.+Assets.xcassets\/(.+)/){ $1 }) + '/').gsub(/^\.\//, '') + destination_resource_name
   end
 
-  def copy
+  def copy(noop: false)
+    if noop
+      return
+    end
+    
     copy_directory
     change_contents
   end
