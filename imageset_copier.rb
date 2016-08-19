@@ -4,12 +4,17 @@ require 'json'
 class ImagesetCopier
 
   # @param imageset_path [String] 元のimagesetのフルパス
-  # @param distination_relative_path [String] imagesetのフォルダ名も含めた名前。例：HogeController/Fuga
-  def initialize(imageset_path, distination_relative_path)
+  # @param distination_name_with_path [String] imagesetのフォルダ名も含めた名前。例：HogeController/Fuga
+  def initialize(imageset_path, distination_name_with_path)
     @imageset_path = imageset_path
-    @distination_relative_path = distination_relative_path
-    @distination_name = File.basename(@distination_relative_path)
-    @distination_path = imageset_path.gsub(/(.+Assets.xcassets\/).+/){ $1 } + @distination_relative_path + '.imageset/'
+    @distination_name = File.basename(distination_name_with_path)
+    @distination_path = imageset_path.gsub(/(.+Assets.xcassets\/).+/){ $1 } + distination_name_with_path + '.imageset/'
+  end
+
+  def self.default_distination_path_from_resource_name(imageset_path, destination_resource_name)
+    # まよう
+    # imageset_path = ProjectUtils.imageset_path_from_resource_name(source_resource_name)
+    (File.dirname(imageset_path.gsub(/.+Assets.xcassets\/(.+)/){ $1 }) + '/').gsub(/^\.\//, '') + destination_resource_name
   end
 
   def copy
@@ -17,7 +22,11 @@ class ImagesetCopier
     change_contents
   end
   
-  def move
+  def move(noop: false)
+    if noop
+      return
+    end
+
     copy_directory
     change_contents
     FileUtils.rm_rf(@imageset_path)
