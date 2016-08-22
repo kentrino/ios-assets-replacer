@@ -12,17 +12,16 @@ class RswiftProcessor
     file = File.read(@filepath).split("\n")
     file.each do |line|
       line.gsub!(/R\.image\.([^\(\)]+)/) do
-        'R.image.' + rename($1)
+        'R.image.' + rename(Regexp.last_match(1))
       end
     end
     # TODO: empty lineはどうなる？
-    if !@noop
-      File.write(@filepath, file.join("\n") + "\n")
-    end
+    File.write(@filepath, file.join("\n") + "\n") unless @noop
   end
 
   private
-  def rename(original_name)
-    raise NotImplementedError.new("You must implement #{self.class}##{__method__}")
+
+  def rename(_original_name)
+    raise NotImplementedError, "You must implement #{self.class}##{__method__}"
   end
 end

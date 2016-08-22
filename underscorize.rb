@@ -4,10 +4,10 @@ require_relative 'project_utils'
 require_relative 'rswift_processor'
 
 class Underscorize
-  PROJECT_PATH = '/Users/kento/ios/HatalikeSwift/HatalikeSwift/'
+  PROJECT_PATH = '/Users/kento/ios/HatalikeSwift/HatalikeSwift/'.freeze
   NOOP = false
 
-  class UnderscorizeRenamer 
+  class UnderscorizeRenamer
     def self.rename(original_name)
       '_' + original_name.camelize
     end
@@ -27,6 +27,7 @@ class Underscorize
 
   class UnderscorizeRswiftProcessor < RswiftProcessor
     private
+
     def rename(original_name)
       original_name = get_upper_from_lower_camel(original_name)
       new_name = UnderscorizeRenamer.rename(original_name)
@@ -40,7 +41,7 @@ class Underscorize
 
     def get_upper_from_lower_camel(str)
       # When str is Camel Case
-      if str.match(/[A-Z]/)
+      if str =~ /[A-Z]/
         str[0] = str[0].upcase
         return str
       end

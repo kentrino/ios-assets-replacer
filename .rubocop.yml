@@ -1,0 +1,26 @@
+# クラスとモジュールのドキュメンテーションは不要
+Style/Documentation:
+  Enabled: false
+
+# ダブルクオーテーションを許可しない
+Style/StringLiterals:
+  Enabled: true
+
+# 日本語のドキュメンテーションを許可
+AsciiComments:
+  Enabled: false
+
+LineLength:
+  Enabled: false
+
+Style/MethodLength:
+  Enabled: false
+
+Metrics/AbcSize:
+  Enabled: false
+
+Style/CyclomaticComplexity:
+  Enabled: false
+
+Style/PerceivedComplexity:
+  Enabled: false

@@ -28,7 +28,7 @@ class ProjectUtils
   end
 end
 
-#p ProjectUtils.list_all_xib('/Users/kento/ios/HatalikeSwift/HatalikeSwift/')
-#p ProjectUtils.list_all_storyboard('/Users/kento/ios/HatalikeSwift/HatalikeSwift/')
+# p ProjectUtils.list_all_xib('/Users/kento/ios/HatalikeSwift/HatalikeSwift/')
+# p ProjectUtils.list_all_storyboard('/Users/kento/ios/HatalikeSwift/HatalikeSwift/')
 
 # p ProjectUtils.imageset_path_from_resource_name('/Users/kento/ios/HatalikeSwift/HatalikeSwift/', 'checkbox')
