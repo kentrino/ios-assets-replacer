@@ -7,7 +7,7 @@ class ImagesetCopier
   def initialize(imageset_path, distination_name_with_path)
     @imageset_path = imageset_path
     @distination_name = File.basename(distination_name_with_path)
-    @distination_path = imageset_path.gsub(%r{(.+Assets.xcassets\/.+)}) { Regexp.last_match(1) } + distination_name_with_path + '.imageset/'
+    @distination_path = imageset_path.gsub(%r{(.+Assets.xcassets\/).+}) { Regexp.last_match(1) } + distination_name_with_path + '.imageset/'
   end
 
   def self.default_distination_path_from_resource_name(imageset_path, destination_resource_name)
@@ -37,6 +37,8 @@ class ImagesetCopier
     distination_dir = File.dirname(@distination_path) + '/'
     FileUtils.mkdir_p(distination_dir)
     FileUtils.rm_rf(@distination_path)
+    @imageset_path
+    @distination_path
     FileUtils.cp_r(@imageset_path, @distination_path, remove_destination: true)
   end
 
