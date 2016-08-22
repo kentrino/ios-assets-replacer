@@ -5,7 +5,7 @@ require_relative 'rswift_processor'
 
 class MainRenamer
   PROJECT_PATH = '/Users/kento/ios/HatalikeSwift/HatalikeSwift/'.freeze
-  NOOP = true
+  NOOP = false
 
   def self.remove_underscore(original_name)
     new_name = original_name
