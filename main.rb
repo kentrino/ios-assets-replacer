@@ -5,7 +5,7 @@ require_relative 'rswift_processor'
 
 class Main
   PROJECT_PATH = '/Users/kento/ios/HatalikeSwift/HatalikeSwift/'
-  NOOP = true
+  NOOP = false
 
   class MainRenamer
     def self.remove_underscore(original_name)
@@ -37,9 +37,71 @@ class Main
   class MainStoryboardProcessor < XmlProcessor
     private
     def rename(original_name)
+      #prefixes.each do |prefix, _|
+        prf = prefix(original_name)
+        if prf.empty?
+          new_resource_name = MainRenamer.remove_underscore(original_name)
+          new_resource_name_with_path = new_resource_name
+          @rename_agenda[original_name] = new_resource_name_with_path
+          print("#{original_name} -> #{new_resource_name_with_path}\n")
+          return new_resource_name
+        end
+
+        new_resource_name = prf + MainRenamer.remove_underscore(original_name)
+        new_resource_name_with_path = prf + "/" + new_resource_name
+        print("#{original_name} -> #{new_resource_name_with_path}\n")
+          
+        @rename_agenda[original_name] = new_resource_name_with_path
+
+        new_resource_name
+      #end
     end
 
     def prefix(original_name)
+      doc = Nokogiri::XML(File.read(@filepath))
+      controller_name = ""
+      # better
+      # controller_names = {}
+      doc.css('viewController').each do |view_controller|
+        view_controller.to_xml.split("\n").each do |line|
+          if line.match(/([iI]mage=)"(#{original_name})"/)
+            if controller_name.empty?
+              controller_name = view_controller['customClass'].gsub(/ViewController/, '')
+            else
+              #print(view_controller['customClass'])
+              #print("########## Fatal Error.\n")
+            end
+          end
+        end
+      end
+
+      doc.css('view').each do |view|
+        view.to_xml.split("\n").each do |line|
+          if line.match(/([iI]mage=)"(#{original_name})"/)
+            if controller_name.empty?
+              controller_name = 'KeepListSubView'
+            else
+              #print("########## Fatal Error.\n")
+            end
+          end
+        end
+      end
+
+      doc.css('navigationController').each do |navigation_controller|
+        navigation_controller.to_xml.split("\n").each do |line|
+          if line.match(/([iI]mage=)"(#{original_name})"/)
+            if controller_name.empty?
+              controller_name = navigation_controller['customClass'] || ""
+              controller_name = controller_name.gsub(/ViewController/, '')
+            else
+              # print(navigation_controller['customClass'])
+              # print("########## Fatal Error.\n")
+            end
+          end
+        end
+      end
+
+      controller_name
     end
   end
 
@@ -52,7 +114,7 @@ class Main
      
       @rename_agenda[original_name] = new_resource_name_with_path
 
-      new_resource_name
+      new_resource_name_called_from_r = new_resource_name[0].downcase + new_resource_name[1..(new_resource_name.size - 1)]
     end
 
     def prefix
@@ -70,9 +132,9 @@ class Main
     rename_agendas = []
 
     ProjectUtils.list_all_storyboard(PROJECT_PATH).each do |storyboard_path|
-      #xib_processor = MainXibProcessor.new(storyboard_path)
-      #xib_processor.run(noop: NOOP)
-      #rename_agenda.merge!(xib_processor.rename_agenda)
+      storyboard_processor = MainStoryboardProcessor.new(storyboard_path)
+      storyboard_processor.run(noop: NOOP)
+      rename_agendas.push(storyboard_processor.rename_agenda)
     end
     
     ProjectUtils.list_all_xib(PROJECT_PATH).each do |xib_path|
