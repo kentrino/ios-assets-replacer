@@ -1,30 +1,5 @@
 require 'yaml'
-require 'singleton'
-
-class PrefixStore
-  include Singleton
-  FILE = '.prefix_store'
-
-  def initialize
-    unless File.exist?(FILE)
-      @data = {}
-      return
-    end
-
-    file = File.read(FILE)
-    @data = YAML.load(file)
-  end
-
-  def [](accessor)
-    @data[accessor]
-  end
-
-  def []=(accessor, value)
-    @data[accessor] = value
-    File.write(FILE, @data.to_yaml)
-    @data = YAML.load(File.read(FILE))
-  end
-end
+require_relative 'prefix_store'
 
 class MainStoryboardProcessor
   def initialize(filepath)
@@ -32,17 +7,17 @@ class MainStoryboardProcessor
     @rename_agendas = []
     @noop = false
   end
-  attr_accessor :rename_agenda
+  attr_accessor :rename_agendas
 
   def run(noop: false)
     @noop = noop
-    # return unless @filepath.include?('Screen')
-    replace_on_scene
+    replace_scenes
+    replace_resources
   end
 
   private
 
-  def replace_on_scene
+  def replace_scenes
     doc = Nokogiri::XML(File.read(@filepath))
     doc.css('objects').each do |object|
       # nodeにはviewController等が入る予定
@@ -58,9 +33,11 @@ class MainStoryboardProcessor
                    node[:customClass].gsub('ViewController', '')
                  end
 
-        node.to_xml.split("\n").each do |line|
-          next unless match = /([iI]mage=)"([^"]+)"/.match(line)
-          original_name = match[2]
+        image_elements = node.css('[image]')
+        image_elements += node.css('[backgroundImage]')
+
+        image_elements.each do |image_element|
+          original_name = image_element[:image] || image_element[:backgroundImage]
           if prefix.empty?
             prefix = if PrefixStore.instance[id]
                        PrefixStore.instance[id]
@@ -70,14 +47,60 @@ class MainStoryboardProcessor
                        PrefixStore.instance[id] = input
                      end
           end
+
           new_resource_name = prefix + MainRenamer.remove_underscore(original_name)
           new_resource_name_with_path = prefix + '/' + new_resource_name
           print("#{original_name} -> #{new_resource_name_with_path}\n")
 
-          @rename_agendas = {original_name: original_name, new_path: new_resource_name_with_path}
+          image_element[original_name] = new_resource_name
+
+          @rename_agendas.push({ original_name => new_resource_name_with_path })
         end
       end
     end
-    p @rename_agendas
+
+    File.write(@filepath, doc.to_xml) unless @noop
+  end
+
+  def replace_resources
+    doc = Nokogiri::XML(File.read(@filepath))
+
+    images = {}
+    resources = doc.css('resources')
+    if resources.empty?
+      # リソースが一つもない場合クラッシュするのを防ぐ
+      return
+    end
+
+    resources.children.each do |image|
+      # 改行だけのノードを無視
+      if image[:name].nil?
+        image.remove
+        next
+      end
+      images[image[:name]] = {name: image[:name], width: image[:width], height: image[:height]}
+      image.remove
+    end
+
+    # imagesを再構築
+    resources[0].add_child("\n")
+
+    @rename_agendas.each do |rename_agenda|
+      rename_agenda.each do |original_name, new_name_with_path|
+        image = Nokogiri::XML::Node.new 'image', doc
+        image[:name] = File.basename(new_name_with_path)
+
+        # 整合のとれていないStoryboardの場合クラッシュする
+        image[:width] = images[original_name][:width]
+        image[:height] = images[original_name][:height]
+        resources[0].add_child('      ')
+        resources[0].add_child(image)
+        resources[0].add_child("\n")
+      end
+    end
+
+    resources[0].add_child('    ')
+
+    File.write(@filepath, doc) unless @noop
   end
 end

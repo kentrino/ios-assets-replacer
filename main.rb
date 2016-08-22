@@ -62,28 +62,28 @@ class MainRenamer
     ProjectUtils.list_all_storyboard(PROJECT_PATH).each do |storyboard_path|
       storyboard_processor = MainStoryboardProcessor.new(storyboard_path)
       storyboard_processor.run(noop: NOOP)
-      rename_agendas.push(storyboard_processor.rename_agenda)
+      rename_agendas += storyboard_processor.rename_agendas
     end
 
     ProjectUtils.list_all_xib(PROJECT_PATH).each do |xib_path|
       xib_processor = MainXibProcessor.new(xib_path)
       #xib_processor.run(noop: NOOP)
-      rename_agendas.push(xib_processor.rename_agenda)
+      #rename_agendas.push(xib_processor.rename_agenda)
     end
 
     ProjectUtils.list_all_swift(PROJECT_PATH).each do |swift_path|
       rswift_processor = MainRswiftProcessor.new(swift_path)
       #rswift_processor.run(noop: NOOP)
-      rename_agendas.push(rswift_processor.rename_agenda)
+      #rename_agendas.push(rswift_processor.rename_agenda)
     end
 
-    #rename_agendas.each do |rename_agenda|
-    #  rename_agenda.each do |original_name, new_name_with_path|
-    #    source_imageset_path = ProjectUtils.imageset_path_from_resource_name(PROJECT_PATH, original_name)
-    #    imageset_copier = ImagesetCopier.new(source_imageset_path, new_name_with_path)
-    #    imageset_copier.copy(noop: NOOP)
-    #  end
-    #end
+    rename_agendas.each do |rename_agenda|
+      rename_agenda.each do |original_name, new_name_with_path|
+        source_imageset_path = ProjectUtils.imageset_path_from_resource_name(PROJECT_PATH, original_name)
+        imageset_copier = ImagesetCopier.new(source_imageset_path, new_name_with_path)
+        imageset_copier.copy(noop: NOOP)
+      end
+    end
   end
 end
 
