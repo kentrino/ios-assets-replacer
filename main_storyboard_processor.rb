@@ -22,44 +22,50 @@ class MainStoryboardProcessor
     doc.css('objects').each do |object|
       # nodeにはviewController等が入る予定
       object.children.each do |node|
-        id = node[:id]
         # 空要素を弾く
-        next if id.nil?
+        next if node[:id].nil?
 
-        prefix = if node[:customClass].nil?
-                   # 手入力
-                   ''
-                 else
-                   node[:customClass].gsub('ViewController', '')
-                 end
-
-        image_elements = node.css('[image]')
-        image_elements += node.css('[backgroundImage]')
-
-        image_elements.each do |image_element|
-          original_name = image_element[:image] || image_element[:backgroundImage]
-          if prefix.empty?
-            prefix = if PrefixStore.instance[id]
-                       PrefixStore.instance[id]
-                     else
-                       print("#{original_name} in #{File.basename(@filepath)}:")
-                       input = gets.chomp
-                       PrefixStore.instance[id] = input
-                     end
-          end
-
-          new_resource_name = prefix + MainRenamer.remove_underscore(original_name)
-          new_resource_name_with_path = prefix + '/' + new_resource_name
-          print("#{original_name} -> #{new_resource_name_with_path}\n")
-
-          image_element[original_name] = new_resource_name
-
-          @rename_agendas.push({ original_name => new_resource_name_with_path })
-        end
+        replace_for_node_with_attribute('image')
+        replace_for_node_with_attribute('backgroundImage')
       end
     end
 
     File.write(@filepath, doc.to_xml) unless @noop
+  end
+
+  def replace_for_node_with_attribute(attribute_name)
+    image_elements = node.css(attribute_name)
+
+    image_elements.each do |image_element|
+      original_name = image_element[attribute_name]
+      prefix = prefix_from_node_or_ask(node, message: "#{original_name} in #{File.basename(@filepath)}:")
+
+      new_resource_name = prefix + MainRenamer.remove_underscore(original_name)
+      new_resource_name_with_path = prefix + '/' + new_resource_name
+      print("#{original_name} -> #{new_resource_name_with_path}\n")
+
+      image_element[attribute_name] = new_resource_name
+
+      @rename_agendas.push({ original_name => new_resource_name_with_path })
+    end
+  end
+
+  def prefix_from_node_or_ask(node, message: '')
+    id = node[:id]
+
+    if node[:customClass]
+      return node[:customClass].gsub('ViewController', '')
+    end
+
+    if PrefixStore.instance[id]
+      return PrefixStore.instance[id]
+    end
+
+    # ask
+    print(message)
+    input = gets.chomp
+    PrefixStore.instance[id] = input
+
   end
 
   def replace_resources
@@ -101,6 +107,6 @@ class MainStoryboardProcessor
 
     resources[0].add_child('    ')
 
-    File.write(@filepath, doc) unless @noop
+    File.write(@filepath, doc.to_xml) unless @noop
   end
 end

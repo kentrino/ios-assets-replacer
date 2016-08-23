@@ -23,7 +23,7 @@ class MainRenamer
       new_resource_name = prefix + MainRenamer.remove_underscore(original_name)
       new_resource_name_with_path = prefix + '/' + new_resource_name
 
-      @rename_agenda[original_name] = new_resource_name_with_path
+      @rename_agendas.push({ original_name => new_resource_name_with_path })
 
       new_resource_name
     end
@@ -42,7 +42,7 @@ class MainRenamer
 
       new_resource_name_with_path = prefix + '/' + new_resource_name
 
-      @rename_agenda[original_name] = new_resource_name_with_path
+      @rename_agendas.push({ original_name => new_resource_name_with_path })
 
       new_resource_name[0].downcase + new_resource_name[1..(new_resource_name.size - 1)]
     end
@@ -67,14 +67,14 @@ class MainRenamer
 
     ProjectUtils.list_all_xib(PROJECT_PATH).each do |xib_path|
       xib_processor = MainXibProcessor.new(xib_path)
-      #xib_processor.run(noop: NOOP)
-      #rename_agendas.push(xib_processor.rename_agenda)
+      xib_processor.run(noop: NOOP)
+      rename_agendas += xib_processor.rename_agendas
     end
 
     ProjectUtils.list_all_swift(PROJECT_PATH).each do |swift_path|
       rswift_processor = MainRswiftProcessor.new(swift_path)
-      #rswift_processor.run(noop: NOOP)
-      #rename_agendas.push(rswift_processor.rename_agenda)
+      rswift_processor.run(noop: NOOP)
+      rename_agendas += rswift_processor.rename_agendas
     end
 
     rename_agendas.each do |rename_agenda|

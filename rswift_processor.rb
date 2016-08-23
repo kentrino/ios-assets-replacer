@@ -1,10 +1,10 @@
 class RswiftProcessor
   def initialize(filepath)
     @filepath = filepath
-    @rename_agenda = {}
+    @rename_agendas = []
     @noop = false
   end
-  attr_accessor :rename_agenda
+  attr_accessor :rename_agendas
 
   def run(noop: false)
     @noop = noop

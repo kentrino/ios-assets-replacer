@@ -5,10 +5,10 @@ class XmlProcessor
   def initialize(filepath)
     @filepath = filepath
     @resource_names = resource_names
-    @rename_agenda = {}
+    @rename_agendas = []
     @noop = false
   end
-  attr_accessor :rename_agenda
+  attr_accessor :rename_agendas
 
   def run(noop: false)
     @noop = noop
